@@ -4,35 +4,7 @@ module Place
 
 	using ToeplitzMatrices, Random, StatsBase, Distributions, LinearAlgebra
 
-	function tophat(x,p)
-	    return exp.(-x.^p)
-	end
-	function dtophat(x,p)
-    	return -p* (x.^(p-1)) .* exp.(-x.^p)
-	end
-	function tophat()
-		return [1.1 5;]
-	end
-
-	function gaussian(x) 
-    	return exp.(-x.^2)
-	end
-	function gaussian()
-		return []
-	end
-	function dgaussian(x) 
-    	return -2*x .* exp.(-x.^2)
-	end
-
-	function cubic(x)
-		return x.^3
-	end
-	function cubic()
-		return []
-	end
-	function dcubic(x)
-		return 3 .* x.^2
-	end
+	include("BasisFunctionTypes.jl")
 
 	struct BasisFunc
     	funct
@@ -92,22 +64,22 @@ module Place
 		#build a time series model of y splitting at point td between build and test
 
 		#sort out all the options
-		if "nbasis"∈options
+		if "nbasis"∈keys(options)
 			nbasis=options["nbasis"]
 		else
 			nbasis=500 #default 500
 		end
-		if "testdatum"∈options
+		if "testdatum"∈keys(options)
 			td=options["testdatum"]
 		else
 			td=[]
 		end
-		if "stopstep"∈options
+		if "stopstep"∈keys(options)
 			stopstep=options["stopstep"]
 		else
 			stopstep=6 #default 6
 		end
-		if "embedding"∈options
+		if "embedding"∈keys(options)
 			v=options["embedding"]
 		else
 			v=[0, 1, 2, 3]
@@ -117,26 +89,33 @@ module Place
 		else
 			nv=1
 		end
-		if "functions"∈options
+		if "penalty"∈keys(options)
+			penalty=options["penalty"]
+		else
+			penalty = :(dx*log(mss)+2*nk)  	#Akaike Information Criterion
+		#	penalty = :(dx*log(mss)+nk*log(dx))	#Schwarz Information Crtierion
+		end
+		if "functions"∈keys(options)
 			functype=options["functions"]
 		else
 			functype=(gaussian, tophat)
 		end
 
+
 		#embed the data
-		X,z = embedding(y,v,td)
+		X,z,Xp,zp = embedding(y,v,td)
 		
 		#generate some basis functions
 		rbfset = getbasis(X,z,functype,v, nbasis)
 
 		#choose basis functions
-		rbf,λ,basis = topdown(X,z,rbfset)
+		rbf,λ,basis,mdlv = topdown(X,z,rbfset,penalty,stopstep)
 
 		#build and output model structure
 		model = PlaceModel(rbf,λ,params,basis,v)
 		#
 		#done
-		return model, X, z
+		return model, X, z, mdlv
 	end
 
 	function embedding(y,v,td=0)
@@ -174,14 +153,17 @@ module Place
 		randfunct=rand(functions,nbasis)
 		randi=sample(1:nx, Weights(abs.(y)),nbasis)
 		randomneighbour=sample(1:nx, Weights(abs.(y)),nbasis) 
+		randr=Array{Float64,1}(undef,nbasis)
 		if v isa Tuple
 			randv=rand(v,nbasis)
-			randr=X[randv.+1,randi]-X[randv.+1,randomneighbour]
+			for i in 1:nbasis
+				randr[i]=normn(X[randv[i].+1,randi[i]]-X[randv[i].+1,randomneighbour[i]])[1]
+			end
 		else
 			randv=[]
 			randr=X[v.+1,randi]-X[v.+1,randomneighbour]
+			randr=normn(randr)
 		end
-		randr=normn(randr)
 		randr=abs.(randr.*randn(nbasis))
 		for i in 1:nbasis
 			#
@@ -215,8 +197,9 @@ module Place
 		return (sum(X.^n, dims=1)).^(1/n)
 	end
 
-	function topdown(X,y,allrbfs)
+	function topdown(X,y,allrbfs:: Array{BasisFunc,1},penalty::Expr,stopstep::Int64)
 		#select an optimal set of basis functions to fit X to y.
+		global mss, nx, nk   #needed for penalty function evaluation
 		ϕ,offset=placebo(X,allrbfs)
 		nb=length(allrbfs)
 		modelbasis=[]
@@ -224,8 +207,16 @@ module Place
 		ϕR=Array{Float64,2}(undef,0,0)
 #		δ=Array{Float64,2}(undef,0,0)
 		err=y
+		mss=mean(y'*y)
+		ny=length(y)
+		dx,nx=size(X)
+		println("dx=$dx, nx=$nx")
 		nk=0
-		while nk<30
+		mdl= Inf	
+		mdlv=[]
+		notimproved=0
+		bestmodelbasis=modelbasis
+		while nk<nb && notimproved<stopstep
 			#
 			μ = -ϕ'*err #compute sensitivity
 			#first try an expand
@@ -246,16 +237,28 @@ module Place
 			#   
 			a1 = ϕR\(ϕQ'*y) #new model weights   
 			err = y - ϕ[:,modelbasis]*a1
-         	#mss= err'*err/dim_y;
+         	mss = (err'*err/ny)
+         	dl=eval(penalty)
+         	#dl=(dx*log(msserr)+nk*log(dx))
+         	if dl<mdl #is this model best?
+         		mdl=dl
+         		bestmodelbasis=deepcopy(modelbasis)
+         		notimproved = 0
+         		print("*")
+         	else
+         		notimproved += 1
+         	end
+         	println("MSS=$mss DL=$dl size=$nk")
+         	append!(mdlv,dl)
 		end
-		λ = ϕR\(ϕQ'*y) 									
-
+		#λ = ϕR\(ϕQ'*y) 									
+		modelbasis=bestmodelbasis
 		rbfs = allrbfs[filter(x -> x>offset, modelbasis).-offset]
 		mbi = [filter(x->x<=offset, modelbasis); (1:count(modelbasis.>offset)) .+ offset]
 		ϕ, = placebo(X,rbfs)		
 		λ = ϕ[:,mbi]\y 	
 		#
-		return rbfs, λ, mbi #do I need to return the ϕ?
+		return rbfs, λ, mbi, mdlv 
  	end
 
 	function placebo(X :: Array{Float64,2}, rbfs ::Array{BasisFunc,1}, constant::Bool=true, linear::Bool=true)

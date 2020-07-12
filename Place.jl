@@ -249,8 +249,43 @@ module Place
 		nq,mq=size(Q) # should be the same and the same as length(δ)
 		if nq==1 #solveable for dimension 1
 			δ=sqrt(Q)
-		end #otherwise...
+		elseif nq==2 #still solevable but messy
+			δ=find2deltas(Q,δ)
+		else #otherwise...
+
+		end 
 	#	println(size(Q))
+		return δ
+	end
+
+	function find2deltas(Q::Array{Float64,2},δ)
+		#compute solution of Qδ=1/δ for the case of 2-by-2 Q
+		nq,mq=size(Q) # should be the same and the same as length(δ)
+		if mq!=2 || nq!=2
+			println("WARNING Q not 2-by-2 in find2deltas")
+		end
+		q11=Q[1,1] #just easier to do this way
+		q12=Q[1,2]
+		q21=Q[2,1]
+		q22=Q[2,2]
+		a = q22*q11^2/q12^2-q21*q11/q12
+		b = q21/q12-2*q11*q22^2/q12-1
+		c = q22/q12^2
+		Δ = (b^2-4*a*c)
+		if Δ<0
+			println("WARNING Qδ=1/δ has no exact solution in 2-D case - giving up")
+			return δ
+		end
+		δ1 = [ (-b+sqrt(Δ))/(2*a), (-b-sqrt(Δ))/(2*a) ]
+		δ1 = filter(x-> x>0 ,δ1) #positive roots only, because we next...
+		δ1 = sqrt(δ1)
+		if isempty(δ1)
+			println("WARNING: no positive δ, giving up and guessing")
+			δ1 = -[ (-b+sqrt(Δ))/(2*a), (-b-sqrt(Δ))/(2*a) ]
+			δ1 = min(δ1)
+		end
+		δ2 = (1 ./ δ1 .- q11*δ1)/q12
+		δ=[δ1, δ2]
 		return δ
 	end
 

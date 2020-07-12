@@ -6,9 +6,9 @@ Currently under development.
 
 Pseudolinear models can be expressed as a linear some of nonlinear functions. That is, the nonlinearity is restricted to the individual terms. Radial basis function networks are an example. The code contained here will develop a parsimonious modelling package to bbuild a approxiamtion to the nonlinear evolution operator of a dynamical system from observed time series. 
 
-The Jupyter notebook `buildmodel` contains the current best guess ofhow to make this work. As of July 12 the code is apparentl working although not performing well - I suspect a bug in the generation/evaluation of the basis functions. I have not yet implemented Newton's method to solve precisions and therfore accurately compute description length, but everything else kind seems to work as intended. 
+The Jupyter notebook `buildmodel` contains the current best guess of how to make this work. As of July 12 the code is apparently working although not performing well - I suspect a bug in the generation/evaluation of the basis functions. Functional (i.e. it doesn't beep) but not extensively tested.
 
-Free for non-commercial use, but please cite the following papers as appropriate:
+Free for non-commercial use, but please cite the following papers as appropriate - the last one is the source, the rest are tweaks.
 - M. Small. Applied Nonlinear Time Series Analysis: Applications in Physics, Physiology and Finance. Nonlinear Science Series A, vol. 52. World Scientific, 2005. (ISBN 981-256-117-X).
 - M. Small, K. Judd and A. Mees. "Modeling continuous processes from data." Physical Review E 65 (2002):046704.
 - M. Small and C.K. Tse. "Minimum description length neural networks for time series prediction." Physical Review E 66 (2002), 066701.

@@ -252,7 +252,32 @@ module Place
 		elseif nq==2 #still solevable but messy
 			δ=find2deltas(Q,δ)
 		else #otherwise...
-
+			#Newton method
+			#
+			#set up parameters
+			max_dd= 1e-4
+			max_err=1e-4
+			min_delta=1e-6
+			max_count=1e2
+			now_count =0
+			# Initialise
+			δ = abs.(δ) #should be not necessary	
+			err = Q*δ - 1 ./ δ
+			dd = 2*max_dd
+			bestδ = δ
+			while any(abs.(dd).>max_dd) || any(err.>max_err) || now_count>max_count
+				dQ=(Q + diagm(1 ./ δ.^2))
+  				if false #CHECK rcond(SS)<eps;
+  					#deal with ill -conditioning
+ 				else
+     				dd = -(Q + diagm(1 ./ δ.^2))\err
+  				end
+  				δ = δ + dd
+  				#push negative \deltas back
+  				δ = map(x->max(x,min_delta),δ)
+  				err = Q*δ - 1 ./ δ
+  				now_count += 1				
+			end
 		end 
 	#	println(size(Q))
 		return δ

@@ -1,6 +1,6 @@
 module Place
 
-	export buildmodel, placebo, predict, freerun, description, BasisFunc, PlaceModel
+	export buildmodel, placebo, predict, freerun, description, vembed, BasisFunc, PlaceModel
 
 	using ToeplitzMatrices, Random, StatsBase, Distributions, LinearAlgebra
 
@@ -154,6 +154,16 @@ module Place
 		z=z[1:(td-1)]#X and z are used to build the model
 		#
 		return X, z, Xp, zp
+	end
+
+	function vembed(v::Vector{T}) where T
+		#compute all possible variable embeddings from v
+		#i.e. all possible nonempty subsets of v as a Tuple
+    	result = Vector{T}[[]]
+    	for elem in v, j in eachindex(result)
+        	push!(result, [result[j] ; elem])
+    	end
+	    return tuple(result[2:end]...)
 	end
 
 	function nearestofnneighbours(X::Array{Float64,2},randi::Array{Int64,1},y,n::Int64=1)

@@ -4,7 +4,7 @@ Pseudo-Linear Approximation to Chaotic Evolution - a Julia library
 
 Currently under development. 
 
-Pseudolinear models can be expressed as a linear some of nonlinear functions. That is, the nonlinearity is restricted to the individual terms. Radial basis function networks are an example. The code contained here will develop a parsimonious modelling package to bbuild a approxiamtion to the nonlinear evolution operator of a dynamical system from observed time series. 
+Pseudolinear models can be expressed as a linear sum of nonlinear functions. That is, the nonlinearity is restricted to the individual terms. Radial basis function networks are an example. The code contained here will develop a parsimonious modelling package to bbuild a approxiamtion to the nonlinear evolution operator of a dynamical system from observed time series. 
 
 The Jupyter notebook `buildmodel` contains the current best guess of how to make this work. As of July 12 the code is apparently working although not performing well - I suspect a bug in the generation/evaluation of the basis functions. Functional (i.e. it doesn't beep) but not extensively tested.
 

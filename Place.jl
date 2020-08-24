@@ -258,7 +258,7 @@ module Place
 	#	println(" in finddeltas")
 		nq,mq=size(Q) # should be the same and the same as length(δ)
 		if nq==1 #solveable for dimension 1
-			δ=sqrt(Q)
+			δ=1/sqrt(Q)
 		elseif nq==2 #still solevable but messy
 			δ=find2deltas(Q,δ)
 		else #otherwise...

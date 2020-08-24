@@ -111,6 +111,11 @@ module Place
 			nneighbours=1
 		end
 
+		#check for NaNs and any other potential trouble makers
+		if any(x->isnan(x),y)
+			println("NaN detected in input to Place.buildmodel")
+		end
+
 		#embed the data
 		X,z,Xp,zp = embedding(y,v,td)
 		
@@ -258,7 +263,7 @@ module Place
 	#	println(" in finddeltas")
 		nq,mq=size(Q) # should be the same and the same as length(δ)
 		if nq==1 #solveable for dimension 1
-			δ=1/sqrt(Q)
+			δ= 1 ./ sqrt(abs.(Q))
 		elseif nq==2 #still solevable but messy
 			δ=find2deltas(Q,δ)
 		else #otherwise...
@@ -387,7 +392,7 @@ module Place
 			λ = ϕR\(ϕQ'*y) #new model weights
 			if needδ
 				if isempty(δ)
-					δ=sqrt(mean(λ))
+					δ=sqrt(abs(mean(λ)))
 				else
 					δ=δ[:] #needs a vector not an 1-by-n matrix - damn you Julia
 					append!(δ, mean(δ)) 
@@ -468,6 +473,10 @@ module Place
 			#
 		end
 		#
+		if any(x->isnan(x),ϕ) #something is screwed up to cause this to arise in the first place...
+			println("NaN generated in placebo")
+			ϕ[isnan.(ϕ)] .= 0
+		end
 		#
 		return ϕ, offset
 	end

@@ -20,7 +20,7 @@ function lorenzpoints(np,sr=0.05)
 	prob = ODEProblem(lorenz!,u0,tspan,param)
 	sol=solve(prob)
 	u0=sol.u[end]
-    #simulate	
+    #simulate
 	tspan = (0.0, np*sr)
 	prob = ODEProblem(lorenz!,u0,tspan,param,saveat = sr)
 	sol=solve(prob)
@@ -39,16 +39,16 @@ function rossler!(du,u,p,t)
 end
 
 
-function rosslerpoints(np,sr=0.05)
+function rosslerpoints(np,sr=0.05, b=0.2)
 	#np points every sr sampling steps
-	param=[0.2 0.2 5.7]
+	param=[0.2 b 5.7]
 	#transient for "long enough"
 	u0 = [1.0;0.0;0.0]
 	tspan = (0.0,10.0)
 	prob = ODEProblem(rossler!,u0,tspan,param)
 	sol=solve(prob)
 	u0=sol.u[end]
-    #simulate	
+    #simulate
 	tspan = (0.0, np*sr)
 	prob = ODEProblem(rossler!,u0,tspan,param,saveat = sr)
 	sol=solve(prob)
@@ -120,8 +120,3 @@ function addnoise(y,σ)
 	z=y+randn(size(y))*stdy*σ
 	return z
 end
-
-
-
-
-

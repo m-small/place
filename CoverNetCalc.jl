@@ -27,12 +27,13 @@ options=Dict("stopstep"=>10,
     "nbasis" => 2000,
     "nneighbours"=> 1
     )
-bs=0.02:0.02:1
-msr=Array{Any,2}(undef,length(bs),4)
+bs=0.005:0.005:1
+msr=Array{Any,2}(undef,length(bs),6)
 
-Threads.@threads for bi in 1:length(bs)
+#Threads.@threads
+for bi in 1:length(bs)
     b=bs[bi]
-    
+
     z=rosslerpoints(5000,0.05,b)
     #plot(z[1,:],z[2,:],z[3,:])
     zn=addnoise(z,0.01)
@@ -69,8 +70,10 @@ Threads.@threads for bi in 1:length(bs)
     msr[bi,1]=diameter(pg[pgi])
     msr[bi,2]=maxsimplecycles(g)
     msr[bi,3]=global_clustering_coefficient(g)
-    gw=g.weights[g.weights.>0]
-    gw=gw./sum(gw)
-    msr[bi,4]=sum(gw.*log.(gw))
+    gww=g.weights[g.weights.>0]
+    gww=gww./sum(gww)
+    msr[bi,4]=sum(gww.*log.(gww))
+    msr[bi,5]=length(pgi)
+    msr[bi,6]=size(g)[1]
 
 end

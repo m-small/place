@@ -41,7 +41,7 @@ end
 function wavelet(x)
 	return (2*x.^2-1) .* exp.(-x.^2)
 end
-function wavetlet()
+function wavelet()
 	return []
 end
 function dwavelet(x)

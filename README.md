@@ -7,6 +7,7 @@ Currently under development.
 Pseudolinear models can be expressed as a linear sum of nonlinear functions. That is, the nonlinearity is restricted to the individual terms. Radial basis function networks are an example. The code contained here will develop a parsimonious modelling package to build a approxiamtion to the nonlinear evolution operator of a dynamical system from observed time series. 
 
 The Jupyter notebook `buildmodel` contains the current best guess of how to make this work. Working (i.e. it doesn't beep) but not yet extensively tested. Various tweaks, extensions and  experiments remain to be done:
+- allow for multi-threaded optimisation (simultaneous model builds and then merge)
 - more basis function types
 - generate new candidate BF sets subject to existing error at each step within the model growth 
 - implement neural nets (should be a single line of code)

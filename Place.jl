@@ -63,7 +63,7 @@ module Place
 	end
 
 
-	
+
 	function buildmodel(y,options=[])
 		#build a time series model of y splitting at point td between build and test
 
@@ -118,7 +118,7 @@ module Place
 
 		#embed the data
 		X,z,Xp,zp = embedding(y,v,td)
-		
+
 		#generate some basis functions
 		rbfset = getbasis(X,z,functype,v, nbasis, nneighbours)
 
@@ -152,7 +152,7 @@ module Place
 			zp=[]
 			td=nX+1
 		else
-			Xp=X[:, td:end] 
+			Xp=X[:, td:end]
 			zp=z[td:end] #Xp and zp are the test data
 		end
 		X=X[:, 1:(td-1)]
@@ -179,7 +179,7 @@ module Place
 		dd=Array{Float64,1}(undef,nbasis)
 		dd .= Inf
 		for i in 1:n
-			randomneighbour=sample(1:ny, Weights(abs.(y)),nbasis) 
+			randomneighbour=sample(1:ny, Weights(abs.(y)),nbasis)
 			randr=X[:,randi]-X[:,randomneighbour]
 			randr=normn(randr)
 			dd=minimum([dd'; randr], dims=1)'
@@ -191,7 +191,7 @@ module Place
 		#distances to the closest of n randomly choosen neighbours - single reference point
 		dx = length(X)
 		ny = length(y)
-		randomneighbour=sample(1:ny, Weights(abs.(y)),n) 
+		randomneighbour=sample(1:ny, Weights(abs.(y)),n)
 		randr=X[:,randi]*ones(1,n) - X[:,randomneighbour]
 		randr=normn(randr)
 		dd = minimum(randr)
@@ -215,7 +215,7 @@ module Place
 			randfunct.=functions
 		end
 		randi=sample(1:nx, Weights(abs.(y)),nbasis)
-	#	randomneighbour=sample(1:nx, Weights(abs.(y)),nbasis) 
+	#	randomneighbour=sample(1:nx, Weights(abs.(y)),nbasis)
 		randr=Array{Float64,1}(undef,nbasis)
 		if v isa Tuple
 			randv=rand(v,nbasis)
@@ -276,7 +276,7 @@ module Place
 			max_count=1e2
 			now_count =0
 			# Initialise
-			δ = abs.(δ) #should be not necessary	
+			δ = abs.(δ) #should be not necessary
 			err = Q*δ - 1 ./ δ
 			dd = 2*max_dd
 			bestδ = δ
@@ -291,9 +291,9 @@ module Place
   				#push negative \deltas back
   				δ = map(x->max(x,min_delta),δ)
   				err = Q*δ - 1 ./ δ
-  				now_count += 1				
+  				now_count += 1
 			end
-		end 
+		end
 	#	println(size(Q))
 		return δ
 	end
@@ -353,7 +353,7 @@ module Place
 	end
 
 	function description(mss,λ,δ,nx)
-		#Compute description length encoding (ala Rissanen) of model with 
+		#Compute description length encoding (ala Rissanen) of model with
 		#error mss, parameters λ to precision δ and nx data
 		global needδ=true
 		return 0.5*nx*(1+log(2*π*mss)) + sum(lstar(λ,δ))
@@ -373,16 +373,17 @@ module Place
 		mss=mean(y'*y)
 		ny=length(y)
 		dx,nx=size(X)
-		println("dx=$dx, nx=$nx")
+		dϕ,nϕ=size(ϕ)
+		println("dx=$dx, nx=$nx, nϕ=$nϕ, offset=$offset")
 		nk=0
-		mdl= Inf	
+		mdl= Inf
 		mdlv=[]
 		notimproved=0
 		bestmodelbasis=modelbasis
 		needδ=false
 		eval(penalty) #just to set needδ=true if necessary...
 		println("needδ=$needδ")
-		while nk<nb && notimproved<stopstep
+		while nk<nϕ && notimproved<stopstep
 			#
 			μ = -ϕ'*err #compute sensitivity
 			#first try an expand
@@ -395,7 +396,7 @@ module Place
 					δ=sqrt(abs(mean(λ)))
 				else
 					δ=δ[:] #needs a vector not an 1-by-n matrix - damn you Julia
-					append!(δ, mean(δ)) 
+					append!(δ, mean(δ))
 				end
 			end
 
@@ -417,8 +418,8 @@ module Place
 				Q = ϕQ'*ϕQ/mss
 				δ = finddeltas(Q,δ)
 			end
-			#   
-			λ = ϕR\(ϕQ'*y) #new model weights   
+			#
+			λ = ϕR\(ϕQ'*y) #new model weights
 			err = y - ϕ[:,modelbasis]*λ
          	mss = (err'*err/ny)
          	dl=eval(penalty)
@@ -437,14 +438,14 @@ module Place
          		mdlv[nk]=dl
          	end
 		end
-		#λ = ϕR\(ϕQ'*y) 									
+		#λ = ϕR\(ϕQ'*y)
 		modelbasis=bestmodelbasis
 		rbfs = allrbfs[filter(x -> x>offset, modelbasis).-offset]
 		mbi = [filter(x->x<=offset, modelbasis); (1:count(modelbasis.>offset)) .+ offset]
-		ϕ, = placebo(X,rbfs)		
-		λ = ϕ[:,mbi]\y 	
+		ϕ, = placebo(X,rbfs)
+		λ = ϕ[:,mbi]\y
 		#
-		return rbfs, λ, mbi, mdlv 
+		return rbfs, λ, mbi, mdlv
  	end
 
 	function placebo(X :: Array{Float64,2}, rbfs ::Array{BasisFunc,1}, constant::Bool=true, linear::Bool=true)
@@ -465,9 +466,9 @@ module Place
 			ϕX = X[rbf.embed.+1, : ] - rbf.centre[rbf.embed.+1]*ones(1,nx)
 			ϕX = normn(ϕX) ./ rbf.radius
 			if isempty(rbf.params)
-				ϕi = rbf.funct(ϕX)		
+				ϕi = rbf.funct(ϕX)
 			else
-				ϕi = rbf.funct(ϕX, rbf.params)		
+				ϕi = rbf.funct(ϕX, rbf.params)
 			end
 			ϕ[:,i+offset] = ϕi
 			#
@@ -526,7 +527,7 @@ module Place
 			end
 			Q[:,p]=Q[:,p]*G'
 		end
-		Q=Q[:,1:n]      #additional clean-up 
+		Q=Q[:,1:n]      #additional clean-up
 		R=R[1:n,1:n]	#bog-standard qrdelete misses this
 		#
 		#
@@ -557,7 +558,7 @@ module Place
 	    end
 	    #
 	    #
-	    return [c s; -s c], [r, 0.]	
+	    return [c s; -s c], [r, 0.]
 	end
 
 end # of module
